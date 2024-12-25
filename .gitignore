@@ -1,0 +1,3 @@
+env/
+oso_gcp_credentials.json
+__pycache__/
