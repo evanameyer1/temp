@@ -164,12 +164,16 @@ def main() -> None:
         display_addresses_table(addresses)
 
     # query and process data
+    credentials = dict(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
+
+    # save credentials to a temporary JSON file
     credentials_path = "google_credentials.json"
     with open(credentials_path, "w") as f:
-        json.dump(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], f)
+        json.dump(credentials, f)
 
     # set the environment variable to point to the temporary JSON file
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+
 
     client = bigquery.Client(BIGQUERY_PROJECT_NAME)
     dates = generate_dates()
