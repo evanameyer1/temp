@@ -2,12 +2,14 @@ import streamlit as st
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas as pd
+import plotly.express as px
 import json
-import os
 from typing import Dict, List, Union, Optional, Tuple
-from single_project_visualizations import process_project, generate_dates, extract_addresses, plot_net_op_flow
+from single_project_visualizations import process_project, generate_dates, extract_addresses
+from defi_llama_visualizations import defi_llama_section, read_in_defi_llama_protocols, return_protocol, safe_execution
 
 BIGQUERY_PROJECT_NAME = 'oso-data-436717'
+DEFI_LLAMA_PROTOCOLS_PATH = "defillama.json"
 GRANTS_PATH = "temp_grants.json"
 
 # create a dictionary of the target grants to work with
@@ -95,40 +97,60 @@ def compute_growth(df: pd.DataFrame, column_name: str) -> Tuple[Optional[float],
 def display_kpis_and_vis(project_daily_transactions: pd.DataFrame, target_metric: str, heading: str) -> None:
     st.subheader(heading)
     
+    # work on a copy of the DataFrame to avoid modifying the original
+    transactions = project_daily_transactions.copy()
+    
     # initial calculations
-    total_count = project_daily_transactions[target_metric].sum()
-    last_day = project_daily_transactions["transaction_date"].iloc[-1]
-    last_day_count = project_daily_transactions.loc[project_daily_transactions["transaction_date"] == last_day, target_metric].sum() if not project_daily_transactions.empty else 0
-    diff, growth = compute_growth(project_daily_transactions, target_metric)
+    total_count = transactions[target_metric].sum()
+    last_day = transactions["transaction_date"].iloc[-1]
+    last_day_count = transactions.loc[transactions["transaction_date"] == last_day, target_metric].sum() if not transactions.empty else 0
+    diff, growth = compute_growth(transactions, target_metric)
 
-    # display growth kpis (columns allow side-by-side)
+    # display growth KPIs (columns allow side-by-side)
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric(label="All-Time", value=round(float(total_count), 4))
-
+        st.metric(label="Since 2024-09-01", value=round(float(total_count), 4))
+    
     with col2:
-        if diff is not None:
+        if diff is not None and diff != 0:
             st.metric(
-                label="Last Day",
+                label=str(last_day),
                 value=round(float(last_day_count), 4),
                 delta=f"{round(float(diff), 4)} ({growth:.2f}%)"
             )
         else:
             # if no growth data, just show the value
-            st.metric(label="Last Day", value=round(float(last_day_count), 4))
-
+            st.metric(label=str(last_day), value=round(float(last_day_count), 4))
+    
     # ensure the transaction date is of the proper data type
-    project_daily_transactions['transaction_date'] = pd.to_datetime(project_daily_transactions['transaction_date'])
+    transactions['transaction_date'] = pd.to_datetime(transactions['transaction_date'])
 
     # plot the data
-    data_grouped = project_daily_transactions.groupby(['transaction_date', 'address'])[target_metric].sum().reset_index()
-    pivoted_data = data_grouped.pivot(index='transaction_date', columns='address', values=target_metric).fillna(0)
-    st.line_chart(pivoted_data)
+    data_grouped = transactions.groupby(['transaction_date', 'address'])[target_metric].sum().reset_index()
+
+    fig = px.line(data_grouped, x='transaction_date', y=target_metric, color='address')
+
+    fig.update_layout(
+        legend_title_text='Addresses',
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="right",
+           x=1.02
+        ),
+        xaxis_title='',
+        yaxis_title='',
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig)
+
 
 # helper function to call the display function for our 3 desired metrics
 def display_core_metrics(project_daily_transactions: pd.DataFrame) -> None:
-    st.header("Core Metrics")
+    st.header("Core Metrics (since grant)")
 
     metrics = ["transaction_cnt", "active_users", "unique_users"]
     headings = ["Transaction Count", "Active Users", "Unique Users"]
@@ -157,13 +179,14 @@ def main() -> None:
     # header 1 - project specifics
     st.divider()
     st.header("Project Specifics / Overview")
-    display_project_details(project)
+    safe_execution(display_project_details, project)
 
     # addresses table
     addresses = project.get("addresses", [])
     if addresses:
-        display_addresses_table(addresses)
+        safe_execution(display_addresses_table, addresses)
 
+    # query and process data
     credentials = service_account.Credentials.from_service_account_info(
         st.secrets["gcp_service_account"]
     )
@@ -178,18 +201,18 @@ def main() -> None:
 
     # header 2 - core metrics
     st.divider()
-    display_core_metrics(project_daily_transactions)
+    safe_execution(display_core_metrics, project_daily_transactions)
 
     # header 3 - op flow metrics
     st.divider()
-    st.header("OP Flow Metrics")
+    st.header("OP Flow Metrics (since grant)")
 
     # display the total OP transfered for each address
-    display_kpis_and_vis(project_daily_transactions, "total_op_transferred_in_tokens", "Total OP Transferred (OP Tokens)")
-
+    safe_execution(display_kpis_and_vis, project_daily_transactions, "total_op_transferred_in_tokens", "Total OP Transferred (OP Tokens)")
+    
     # filter the dataset to only display the net op of addresses from the project
     filtered_project_net_op_flow = project_net_op_flow[project_net_op_flow['address'].isin(project_addresses)]
-    display_kpis_and_vis(filtered_project_net_op_flow, "total_op_transferred_in_tokens", "Net OP Transferred (OP Tokens)")
+    safe_execution(display_kpis_and_vis, filtered_project_net_op_flow, "total_op_transferred_in_tokens", "Net OP Transferred (OP Tokens)")
 
     # create a table that displays transaction count information and net op flow for each project address
     st.subheader("Contract-Specific Metrics")
@@ -206,7 +229,10 @@ def main() -> None:
 
     st.divider()
 
-    st.header("Defi Llama Metrics")
+    defi_llama_protocols = read_in_defi_llama_protocols(DEFI_LLAMA_PROTOCOLS_PATH)
+    protocol = return_protocol(defi_llama_protocols, selected_project_name)
+    if protocol:
+        defi_llama_section(protocol)
 
 
 if __name__ == "__main__":
