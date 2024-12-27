@@ -44,6 +44,12 @@ def make_dates_df(dates: List[str], project_addresses: Tuple[str, ...]) -> pd.Da
 # query the daily transaction data of the project addresses over the interval and store it in a dataframe
 def query_daily_transactions(client: bigquery.Client, project_addresses: Tuple[str, ...], dates_df: pd.DataFrame) -> pd.DataFrame:
     try:
+        # handle single or multiple addresses in the query
+        if len(project_addresses) == 1:
+            addresses_condition = f"= '{project_addresses[0]}'"
+        else:
+            addresses_condition = f"IN {tuple(project_addresses)}"
+
         daily_transactions_query = f"""
             SELECT 
                 dt AS transaction_date,
@@ -53,12 +59,12 @@ def query_daily_transactions(client: bigquery.Client, project_addresses: Tuple[s
                 COUNT(DISTINCT from_address) AS unique_users,
                 SUM(value_64) AS total_op_transferred
             FROM `{BIGQUERY_PROJECT_NAME}.optimism_superchain_raw_onchain_data.transactions` 
-            WHERE to_address IN {project_addresses}
+            WHERE to_address {addresses_condition}
                 AND network = '{PROJECT_NETWORK}'
                 AND dt >= '{PROJECT_START_DATE}'
             GROUP BY dt, to_address
             ORDER BY dt, to_address"""
-        
+                
         daily_transactions_result = client.query(daily_transactions_query)
         daily_transactions_df = daily_transactions_result.to_dataframe()
 
@@ -86,6 +92,12 @@ def query_daily_transactions(client: bigquery.Client, project_addresses: Tuple[s
 # create a table of all transactions (in and out) involving one of the project addresses over the interval
 def query_op_flow(client: bigquery.Client, project_addresses: Tuple[str, ...]) -> pd.DataFrame:
     try:
+        # handle single or multiple addresses in the query
+        if len(project_addresses) == 1:
+            addresses_condition = f"= '{project_addresses[0]}'"
+        else:
+            addresses_condition = f"IN {tuple(project_addresses)}"
+
         op_flow_query = f"""
         (SELECT 
             dt AS transaction_date,
@@ -95,7 +107,7 @@ def query_op_flow(client: bigquery.Client, project_addresses: Tuple[str, ...]) -
             SUM(value_64) AS total_op_transferred
         FROM `{BIGQUERY_PROJECT_NAME}.optimism_superchain_raw_onchain_data.transactions`
         WHERE network = '{PROJECT_NETWORK}'
-            AND to_address IN {project_addresses}
+            AND to_address {addresses_condition}
             AND dt >= '{PROJECT_START_DATE}'
         GROUP BY dt, from_address, to_address
         ORDER BY 3 DESC)
@@ -108,9 +120,9 @@ def query_op_flow(client: bigquery.Client, project_addresses: Tuple[str, ...]) -
             to_address,
             COUNT(*) AS cnt,
             SUM(value_64) AS total_op_transferred
-        FROM `oso-data-436717.optimism_superchain_raw_onchain_data.transactions`
+        FROM `{BIGQUERY_PROJECT_NAME}.optimism_superchain_raw_onchain_data.transactions`
         WHERE network = '{PROJECT_NETWORK}'
-            AND from_address IN {project_addresses}
+            AND from_address {addresses_condition}
             AND dt >= '{PROJECT_START_DATE}'
         GROUP BY dt, from_address, to_address
         ORDER BY 3 DESC)"""
