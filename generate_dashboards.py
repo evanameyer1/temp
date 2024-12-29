@@ -13,8 +13,8 @@ from hypothesis_testing import hypothesis_testing_section
 
 GRANT_DATE = datetime(2024, 9, 1)
 BIGQUERY_PROJECT_NAME = 'oso-data-436717'
-DEFI_LLAMA_PROTOCOLS_PATH = "streamlit_dashboard/defillama.json"
-GRANTS_PATH = "streamlit_dashboard/temp_grants.json"
+DEFI_LLAMA_PROTOCOLS_PATH = "defillama.json"
+GRANTS_PATH = "temp_grants.json"
 
 # create a dictionary of the target grants to work with
 def read_in_grants(grants_path: str) -> Dict[str, Dict[str, Union[str, List[str], Dict[str, Union[str, int]]]]]:
