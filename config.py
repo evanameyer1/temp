@@ -1,4 +1,5 @@
 from datetime import datetime
+import streamlit as st
 
 PULL_FROM_BIGQUERY = False
 LIVE_STREAMLIT_INSTANCE = False
@@ -11,7 +12,6 @@ GRANT_DATE = datetime(2024, 9, 1)
 GRANT_DATE_STR = '2024-09-01'
 
 PROJECT_NETWORK = 'mainnet'
-
 
 BIGQUERY_PROJECT_NAME = 'oso-data-436717'
 
