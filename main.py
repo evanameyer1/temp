@@ -11,10 +11,8 @@ from utils import (extract_addresses,
                    read_in_defi_llama_protocols, 
                    return_protocol, 
                    read_in_grants, 
-                   read_in_stored_dfs_for_projects, 
-                   query_transaction_data_from_bq,
-                   connect_bq_client,
-                   query_tvl_data_from_bq)
+                   read_in_stored_dfs_for_projects,
+                   connect_bq_client)
 
 from config import (GRANTS_PATH, 
                     DEFI_LLAMA_PROTOCOLS_PATH, 
