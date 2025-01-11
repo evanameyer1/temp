@@ -1,19 +1,16 @@
 from datetime import datetime
 
 # whether or not to pull al the data live from bigquery 
-PULL_FROM_BIGQUERY = False
+#PULL_FROM_BIGQUERY = False
 # whether or not there's a live streamlit instance connected to this repo
-LIVE_STREAMLIT_INSTANCE = False
+#LIVE_STREAMLIT_INSTANCE = False
 
 # the rate to convert bigquery transaction amounts into tokens
-TOKEN_CONVERSION = 1E15
+#TOKEN_CONVERSION = 1E15
 
 # the date the grant occured
-GRANT_DATE = datetime(2024, 9, 1)
-GRANT_DATE_STR = '2024-09-01'
-
-# the project networks the transactions occured on
-PROJECT_NETWORK = ('mainnet')
+#GRANT_DATE = datetime(2024, 9, 1)
+#GRANT_DATE_STR = '2024-09-01'
 
 # the project name for the bigquery project
 BIGQUERY_PROJECT_NAME = 'oso-data-436717'
