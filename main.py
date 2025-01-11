@@ -100,15 +100,6 @@ def main() -> None:
     token_conversion = project['token_conversion']
     grant_date = project['grant_date']
 
-    st.write(project_name)
-    st.write(chain)
-    st.write(pull_from_bigquery)
-    st.write(store_bq_datasets)
-    st.write(live_streamlit_instance)
-    st.write(display_by_address)
-    st.write(token_conversion)
-    st.write(grant_date)
-
     # get the relevant wallet/contract addresses associated with the selected project
     just_addresses, project_addresses = extract_addresses(project_dict=project) 
     # check if the selected project has an associated defi llama protocol
