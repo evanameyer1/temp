@@ -59,9 +59,8 @@ def get_project_min_date_optimism(client: bigquery.Client, project_addresses: Tu
     transactions_min_date = query_transactions_min_date_optimism(client=client, project_addresses=project_addresses, start_date=min_start_string)
 
     # ensure transactions_min_date is valid before comparison
-    if transactions_min_date is not None:
-        # determine the minimum start date we can use
-        min_start = max(transactions_min_date, min_start)
+    # determine the minimum start date we can use
+    min_start = max(transactions_min_date, min_start)
 
     return min_start
 
