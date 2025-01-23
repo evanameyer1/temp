@@ -17,7 +17,7 @@ def main() -> None:
 
         query = f"""
         SELECT
-            COALESCE(MIN(CASE WHEN dt >= DATE("{grant_approval_date}") THEN dt END), DATE("{grant_approval_date}")) AS minimum_date,
+            COALESCE(MIN(CASE WHEN (dt >= DATE("{grant_approval_date}") AND value_64 > 0) THEN dt END), DATE("{grant_approval_date}")) AS minimum_date,
             SUM(CASE WHEN dt < DATE("{grant_approval_date}") THEN value_64 ELSE 0 END) AS starting_balance,
             SUM(CASE WHEN dt >= DATE("{grant_approval_date}") THEN value_64 ELSE 0 END) AS inflow_total
         FROM `oso-data-436717.oso_production.int_superchain_transactions_sandbox`
