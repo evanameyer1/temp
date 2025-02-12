@@ -935,7 +935,7 @@
         "inflow_total_todate": 0,
         "recieve_todate": false,
         "balance_left_todate": 50000,
-        "north_star": "gas_fees"
+        "north_star": "gas_fee"
     },
     {
         "round": "Grants Season 6",
@@ -2101,7 +2101,7 @@
         "inflow_total_todate": 1,
         "recieve_todate": false,
         "balance_left_todate": 19999,
-        "north_star":"gas_fees"
+        "north_star":"gas_fee"
     },
     {
         "round": "Grants Season 6",
@@ -3349,7 +3349,7 @@
         "inflow_total_todate": 0,
         "recieve_todate": false,
         "balance_left_todate": 50000,
-        "north_star":"gas_fees"
+        "north_star":"gas_fee"
     },
     {
         "round": "Grants Season 6",
@@ -3671,7 +3671,7 @@
         "inflow_total_todate": 0,
         "recieve_todate": false,
         "balance_left_todate": 50000,
-        "north_star":"gas_fees"
+        "north_star":"gas_fee"
     },
     {
         "round": "Grants Season 6",
