@@ -139,6 +139,7 @@ def read_in_stored_dfs_for_projects(project_name: str, data_path: str, protocols
     tvl_df = None
     tokens_in_usd_df = None
     forecasted_df = None
+    delegators_and_voters_df = None
 
     # read in daily transactions dataset
     try:
@@ -175,6 +176,12 @@ def read_in_stored_dfs_for_projects(project_name: str, data_path: str, protocols
     except Exception:
         pass
 
+    # read in delegators and voters dataset
+    try:
+        delegators_and_voters_df = pd.read_csv(f"{data_path}{clean_name}/{clean_name}_delegators_and_voters.csv")
+    except Exception:
+        pass
+
     # return a dict with each key = dataframe or None
     return {
         "daily_transactions": daily_transactions,
@@ -182,7 +189,8 @@ def read_in_stored_dfs_for_projects(project_name: str, data_path: str, protocols
         "forecasted" : forecasted_df,
         "chain_tvls" : chain_tvls_df,
         "tvl": tvl_df,
-        "tokens_in_usd": tokens_in_usd_df
+        "tokens_in_usd": tokens_in_usd_df,
+        "delegators_and_voters": delegators_and_voters_df
     }
 
 # helper function used to create KPIs that determine the amount of growth that occurred between two metrics 

@@ -29,7 +29,7 @@ def print_with_timestamp(message: str) -> None:
 projects = read_in_grants(grants_path="errored_projects.json")
 defi_llama_protocols = read_in_defi_llama_protocols(path=DEFI_LLAMA_PROTOCOLS_PATH)
 
-grab_from_bigquery = False
+grab_from_bigquery = True
 failed_projects = []
 
 for project_name, project in projects.items():
@@ -69,7 +69,6 @@ for project_name, project in projects.items():
             datasets = read_in_stored_dfs_for_projects(project_name=project_name, data_path=STORED_DATA_PATH, protocols=defi_llama_protocols)
 
         project_forecasted_df = forecast_project(datasets=datasets, grant_date=grant_date)
-        print(project_forecasted_df)
         print_with_timestamp("forecasting completed")
         datasets['forecasted_metrics'] = project_forecasted_df
 

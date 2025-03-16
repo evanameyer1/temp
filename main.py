@@ -130,6 +130,7 @@ def main() -> None:
         token_conversion = project['token_conversion']
         grant_date = project['funds_recieved_date']
         grant_amount = project['amount']
+        north_star = project["north_star"]
 
         # get the relevant wallet/contract addresses associated with the selected project
         just_addresses, project_addresses = extract_addresses(project_dict=project) 
@@ -194,8 +195,14 @@ def main() -> None:
 
         # display the line charts for the daily transactions data
         with core_metrics:
+            if north_star in ["new_delegators", "new_voters"]:
+                delegators_and_voters_df = project_datasets["delegators_and_voters"]
+            else:
+                delegators_and_voters_df = None
+
             core_metrics_section(daily_transactions_df=project_daily_transactions_df, 
                                  net_transaction_flow_df=project_net_transaction_flow_df, 
+                                 delegators_and_voters_df=delegators_and_voters_df,
                                  project_addresses=project_addresses, 
                                  grant_date=grant_date, 
                                  chain=chain,

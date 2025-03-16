@@ -6,7 +6,7 @@ from utils import read_in_stored_dfs_for_projects, read_in_grants, extract_addre
 
 from config import GRANTS_PATH, DEFI_LLAMA_PROTOCOLS_PATH, STORED_DATA_PATH
 
-projects = read_in_grants(grants_path="t.json")
+projects = read_in_grants(grants_path=GRANTS_PATH)
 defi_llama_protocols = read_in_defi_llama_protocols(path=DEFI_LLAMA_PROTOCOLS_PATH)
 
 for project_name, project in projects.items():
@@ -24,6 +24,10 @@ for project_name, project in projects.items():
     forecasted_df = forecast_project(datasets, grant_date)
 
     if forecasted_df is not None and not forecasted_df.empty:
-        forecasted_df.to_csv(f"{STORED_DATA_PATH}{clean_name}/{clean_name}_forecasted_metrics.csv", index=False)
+        forecasted_df.to_csv(f"{STORED_DATA_PATH}{clean_name}/{clean_name}_forecasted_metrics2.csv", index=False)
+
+    # check = input("Check dataset: ")
+    # if check == "Y":
+    #     pass
 
     print(f"project: {clean_name} finished")

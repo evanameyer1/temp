@@ -24,7 +24,6 @@ def query_tvl(client: bigquery.Client, protocol: str) -> pd.DataFrame:
 
     if protocol_len > 0:
         protocol_df = protocol_result.to_dataframe()
-
         return protocol_df
     else:
         return None

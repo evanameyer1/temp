@@ -3,7 +3,6 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 
-
 # helper function to format percent change
 def format_percent_change(value: float) -> str:
     if abs(value) >= 1e6:  # use scientific notation for very large values
@@ -172,14 +171,14 @@ def by_protocol_table(df: pd.DataFrame, alpha: float) -> None:
         # process tvl results
         if row['TVL-pvalue'] < alpha:
             sign = "increase" if row['TVL-percent_change'] > 0 else "decrease"
-            tvl_result = f"{format_percent_change(abs(row['TVL-percent_change']))}% daily average {sign}"
+            tvl_result = f"{format_percent_change(abs(row['TVL-percent_change'] * 100))}% daily average {sign}"
         else:
             tvl_result = "no statistically significant change"
         
         # process tvl_opchain results
         if row['TVL_opchain-pvalue'] < alpha:
             sign = "increase" if row['TVL_opchain-percent_change'] > 0 else "decrease"
-            tvl_opchain_result = f"{format_percent_change(abs(row['TVL_opchain-percent_change']))}% daily average {sign}"
+            tvl_opchain_result = f"{format_percent_change(abs(row['TVL_opchain-percent_change'] * 100))}% daily average {sign}"
         else:
             tvl_opchain_result = "no statistically significant change"
         
@@ -225,7 +224,7 @@ def display_north_star_metrics(df1: pd.DataFrame, df2: pd.DataFrame, alpha: floa
     for _, row in df1.iterrows():
         if row['p_value'] < alpha:
             sign = "increase" if row['Percent Change'] > 0 else "decrease"
-            result = f"{format_percent_change(abs(row['Percent Change']))}% daily average {sign}"
+            result = f"{format_percent_change(abs(row['Percent Change'] * 100))}% daily average {sign}"
         else:
             result = "no statistically significant change"
         df1_results.append(result)
@@ -258,7 +257,7 @@ def display_north_star_metrics(df1: pd.DataFrame, df2: pd.DataFrame, alpha: floa
     for _, row in df2.iterrows():
         if row['p_value'] < alpha:
             sign = "increase" if row['Percent Change'] > 0 else "decrease"
-            result = f"{format_percent_change(abs(row['Percent Change']))}% daily average {sign}"
+            result = f"{format_percent_change(abs(row['Percent Change'] * 100))}% daily average {sign}"
         else:
             result = "no statistically significant change"
         df2_results.append(result)
