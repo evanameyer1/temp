@@ -1,0 +1,4 @@
+env/
+oso_gcp_credentials.json
+__pycache__/
+.streamlit/secrets.toml

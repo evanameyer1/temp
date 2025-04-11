@@ -14,10 +14,10 @@ import numpy as np
 projects = read_in_grants(GRANTS_PATH)
 defi_llama_protocols = read_in_defi_llama_protocols(path=DEFI_LLAMA_PROTOCOLS_PATH)
 
-target_metrics = ["TVL", "active_users", "DAA/MAA", "transaction_cnt", "gas_fee"]
+target_metrics = ["TVL", "active_users", "DAA/MAA", "transaction_cnt", "gas_fee", "new_delegators", "new_voters"]
 
-ttest_results = pd.read_csv("data/ttest_results2.csv", header=[0,1])
-tvl_ttest_results = pd.read_csv("data/tvl_ttest_results2.csv")
+ttest_results = pd.read_csv("data/ttest_results.csv", header=[0,1])
+tvl_ttest_results = pd.read_csv("data/tvl_ttest_results.csv")
 
 # Results containers
 north_star_results = {
@@ -38,6 +38,8 @@ tvl_north_star_results = {
     "percent_change": [],
     "p_value": []
 }
+
+not_in = []
 
 for project_name, project in projects.items():
     north_star = project.get("north_star")
@@ -145,7 +147,7 @@ for project_name, project in projects.items():
                         tvl_north_star_results["p_value"].append(p_value)
 
         else:
-            # The north star is one of: "active_users", "DAA/MAA", "transaction_cnt", "gas_fee"
+            # The north star is one of: "active_users", "DAA/MAA", "transaction_cnt", "gas_fee", "new_delegators", "new_voters"
             # We'll do a pre-grant vs post-grant t-test
             north_star_results["project"].append(project_name)
             north_star_results["north_star"].append(north_star)
@@ -163,6 +165,12 @@ for project_name, project in projects.items():
                 transactions_df["transaction_date"] = pd.to_datetime(
                     transactions_df["transaction_date"], errors='coerce'
                 )
+
+            if north_star in ["new_delegators", "new_voters"]:
+                delegators_and_voters_df = datasets.get("delegators_and_voters")
+                delegators_and_voters_df["date"] = pd.to_datetime(delegators_and_voters_df["date"])
+                transactions_df = pd.merge(transactions_df, delegators_and_voters_df, left_on="transaction_date", right_on="date", how="outer")
+                transactions_df.rename(columns={"unique_delegates":"new_delegators", "unique_voters":"new_voters"}, inplace=True)
 
             # Ensure the chosen column (north_star) actually exists
             if north_star not in transactions_df.columns:
@@ -204,6 +212,9 @@ for project_name, project in projects.items():
             )
             north_star_results["percent_change"].append(percent_change)
             north_star_results["p_value"].append(p_value)
+
+    else:
+        not_in.append({project_name : north_star})
 
 # Convert to DataFrame and save
 north_star_results = pd.DataFrame(north_star_results)

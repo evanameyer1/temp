@@ -29,6 +29,7 @@ defi_llama_protocols = read_in_defi_llama_protocols(path=DEFI_LLAMA_PROTOCOLS_PA
 
 failed_projects = []
 ttest_results = {
+    "project": [],
     "protocol": [],
     "TVL-pvalue": [],
     "TVL-percent_change": [],
@@ -87,8 +88,10 @@ for project_name, project in projects.items():
                     if "totalLiquidityUSD" in project_tvl_df.columns:
                         project_tvl_df.rename(columns={"totalLiquidityUSD": "TVL"}, inplace=True)
 
+                print_with_timestamp(f"{project_name} → procotols: {protocols}")
+
                 for proto in protocols:
-                    project_tvl_df = project_tvl_df[project_tvl_df["protocol"] == proto]
+                    tvl_df_for_proto = project_tvl_df[project_tvl_df["protocol"] == proto].copy()
 
                     # We need to ensure we can rename forecasted_TVL-{proto} => TVL
                     # and forecasted_TVL_opchain-{proto} => TVL_opchain
@@ -118,21 +121,21 @@ for project_name, project in projects.items():
                         if "TVL" not in project_tvl_df.columns:
                             continue
 
-                        if "readable_date" in project_tvl_df.columns and "TVL" in project_tvl_df.columns:
-                            project_tvl_df = project_tvl_df[["readable_date", "TVL"]].dropna()
-                            project_tvl_df["readable_date"] = pd.to_datetime(project_tvl_df["readable_date"])
+                        if "readable_date" in tvl_df_for_proto.columns and "TVL" in tvl_df_for_proto.columns:
+                            tvl_df_for_proto = tvl_df_for_proto[["readable_date", "TVL"]].dropna()
+                            tvl_df_for_proto["readable_date"] = pd.to_datetime(tvl_df_for_proto["readable_date"])
 
                             if not df_proto.empty:
                                 min_date = grant_date - Timedelta(days=len(df_proto))
                             else:
                                 min_date = grant_date  
 
-                            pre_grant_tvl_df = project_tvl_df[
-                                (project_tvl_df["readable_date"] < grant_date) & 
-                                (project_tvl_df["readable_date"] >= min_date)
+                            pre_grant_tvl_df = tvl_df_for_proto[
+                                (tvl_df_for_proto["readable_date"] < grant_date) & 
+                                (tvl_df_for_proto["readable_date"] >= min_date)
                             ].reset_index(drop=True)
 
-                            post_grant_tvl_df = project_tvl_df[project_tvl_df["readable_date"] >= grant_date].reset_index(drop=True)
+                            post_grant_tvl_df = tvl_df_for_proto[tvl_df_for_proto["readable_date"] >= grant_date].reset_index(drop=True)
 
                         # We'll treat post_grant_tvl_df as sample2
                         sample2_df = pd.DataFrame()
@@ -141,6 +144,7 @@ for project_name, project in projects.items():
                         sample2_df["var"] = post_grant_tvl_df[["TVL"]].var()
 
                         # Mark which protocol we're analyzing in results
+                        ttest_results["project"].append(project_name)
                         ttest_results["protocol"].append(proto)
 
                         # We'll run two T-tests:
@@ -176,6 +180,8 @@ for project_name, project in projects.items():
                                 ttest_results["TVL_opchain-percent_change"].append(percent_change)
                                 ttest_results["TVL_opchain-pvalue"].append(p_value)
                                 ttest_results["TVL_opchain-tstat"].append(t_stat)
+
+                print_with_timestamp(f"{project_name} → added results for {proto}")
 
             print(f"project done")
 

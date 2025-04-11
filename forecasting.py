@@ -187,13 +187,12 @@ def forecast_project(datasets: Dict[str, pd.DataFrame], grant_date: datetime) ->
         else:
             target_cols = aggregated_dataset.drop(['date', 'grant_label'], axis=1).columns
 
-        # initialize the forecasted dataframe
         forecasted_df = None
 
         for col in target_cols:
-            # adjust forecasting parameters based on the column
             if col == 'TVL':
                 protocols = aggregated_dataset["protocol"].dropna().unique().tolist()
+                protocol_forecasts = []
 
                 for protocol in protocols:
                     curr_protocol_aggregated_dataset = aggregated_dataset[aggregated_dataset["protocol"] == protocol].drop("protocol", axis=1)
@@ -201,13 +200,6 @@ def forecast_project(datasets: Dict[str, pd.DataFrame], grant_date: datetime) ->
                     curr_protocol_post_grant_df = post_grant_df[post_grant_df["protocol"] == protocol].drop("protocol", axis=1)
 
                     if len(curr_protocol_aggregated_dataset) > 10 and len(curr_protocol_pre_grant_df) > 10 and len(curr_protocol_post_grant_df) > 10:
-                        
-                        col_forecasted_df2 = forecast_based_on_chain_tvl(
-                            chain_tvl=optimism_bridge_tvl, 
-                            target_protocol=curr_protocol_aggregated_dataset,
-                            grant_date=grant_date
-                        )
-
                         col_forecasted_df = forecast_based_on_pregrant(
                             curr_protocol_pre_grant_df, 
                             curr_protocol_post_grant_df, 
@@ -216,15 +208,32 @@ def forecast_project(datasets: Dict[str, pd.DataFrame], grant_date: datetime) ->
                             target_col=col
                         )
 
-                        if col_forecasted_df is not None and col_forecasted_df2 is not None:
+                        col_forecasted_df2 = forecast_based_on_chain_tvl(
+                            chain_tvl=optimism_bridge_tvl, 
+                            target_protocol=curr_protocol_aggregated_dataset,
+                            grant_date=grant_date
+                        )
+
+                        if col_forecasted_df is not None:
                             col_forecasted_df.rename(columns={"forecasted_TVL": f"forecasted_TVL-{protocol}"}, inplace=True)
+                        if col_forecasted_df2 is not None:
                             col_forecasted_df2.rename(columns={"forecasted_TVL_opchain": f"forecasted_TVL_opchain-{protocol}"}, inplace=True)
-                            col_forecasted_df = col_forecasted_df.merge(col_forecasted_df2, how='outer', on='date')
-                        elif col_forecasted_df2 is not None and col_forecasted_df is None:
-                            col_forecasted_df = col_forecasted_df2
-                            col_forecasted_df2.rename(columns={"forecasted_TVL_opchain": f"forecasted_TVL_opchain-{protocol}"}, inplace=True)
-                        else:
-                            col_forecasted_df = None
+
+                        if col_forecasted_df is not None and col_forecasted_df2 is not None:
+                            combined_df = col_forecasted_df.merge(col_forecasted_df2, on="date", how="outer")
+                            protocol_forecasts.append(combined_df)
+                        elif col_forecasted_df is not None:
+                            protocol_forecasts.append(col_forecasted_df)
+                        elif col_forecasted_df2 is not None:
+                            protocol_forecasts.append(col_forecasted_df2)
+
+                # merge all protocol forecasts
+                if protocol_forecasts:
+                    col_forecasted_df = protocol_forecasts[0]
+                    for df in protocol_forecasts[1:]:
+                        col_forecasted_df = col_forecasted_df.merge(df, on="date", how="outer")
+                else:
+                    col_forecasted_df = None
 
             else:
                 if 'protocol' in pre_grant_df.columns:
@@ -242,11 +251,11 @@ def forecast_project(datasets: Dict[str, pd.DataFrame], grant_date: datetime) ->
                         target_col=col
                     )
 
-            # merge the forecasts for each column
+            # merge into the full forecasted_df
             if forecasted_df is None:
                 forecasted_df = col_forecasted_df
             elif col_forecasted_df is not None:
-                forecasted_df = forecasted_df.merge(col_forecasted_df, on='date', how='outer')
+                forecasted_df = forecasted_df.merge(col_forecasted_df, on="date", how="outer")
 
         return forecasted_df
 

@@ -19,8 +19,12 @@ for project_name, project in projects.items():
     just_addresses, project_addresses = extract_addresses(project_dict=project) 
     project_protocol = return_protocol(defi_llama_protocols=defi_llama_protocols, project=project_name)
 
-    datasets = read_in_stored_dfs_for_projects(clean_name, STORED_DATA_PATH, project_protocol)
+    if not project_protocol or len(project_protocol) < 2 or clean_name in ["ether-fi_op_mainnet_lrt_grant", "expanding_restaking_on_optimism"]:
+        print(f"project: {clean_name} skipped")
+        continue
 
+    print(f"project: {clean_name} forecasting")
+    datasets = read_in_stored_dfs_for_projects(clean_name, STORED_DATA_PATH, project_protocol)
     forecasted_df = forecast_project(datasets, grant_date)
 
     if forecasted_df is not None and not forecasted_df.empty:
